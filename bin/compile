@@ -1,14 +1,36 @@
 #!/usr/bin/env bash
-# bin/compile <build-dir> <cache-dir>
+# bin/compile <build-dir> <cache-dir> <env-dir>
 
 # Parse args
 BUILD_DIR=$1
 CACHE_DIR=$2
+ENV_DIR=$3
 
 BIN_DIR=$(cd $(dirname $0); pwd) # absolute path
 
 # source in common functions
 . $BIN_DIR/common.sh
+
+curl --silent --location http://heroku-jvm-common.s3.amazonaws.com/jvm-buildpack-common.tar.gz | tar xz
+. bin/util
+. bin/java
+
+export_env_dir $ENV_DIR
+
+#create the cache dir if it doesn't exist
+mkdir -p $CACHE_DIR
+
+# create default system.properties 
+if [ ! -f ${BUILD_DIR}/system.properties ]; then
+  echo "java.runtime.version=1.6" > ${BUILD_DIR}/system.properties
+fi
+
+# install JDK 
+javaVersion=$(detect_java_version ${BUILD_DIR})
+echo -n "-----> Installing OpenJDK ${javaVersion}..."
+install_java ${BUILD_DIR} ${javaVersion}
+jdk_overlay ${BUILD_DIR}
+echo "done"
 
 PLAY_PATH=".play"
 IVY_PATH=".ivy2"
@@ -25,7 +47,7 @@ for DIR in $PLAY_PATH $IVY_PATH ; do
 done
 
 PLAY_VERSION=$(get_play_version conf/dependencies.yml)
-DEFAULT_PLAY_VERSION="1.2.4"
+DEFAULT_PLAY_VERSION="1.2.6"
 VERSION_DECLARED=true
 
 if [ -z "$PLAY_VERSION" ] ; then
@@ -88,6 +110,10 @@ for DIR in $PLAY_PATH $IVY_PATH ; do
   rm -rf $CACHE_DIR/$DIR
   cp -r $DIR $CACHE_DIR/$DIR
 done
+
+PROFILE_PATH="$BUILD_DIR/.profile.d/play.sh"
+mkdir -p $(dirname $PROFILE_PATH)
+echo 'export PATH="/app/.jdk/bin:$PATH"' >> $PROFILE_PATH
 
 # Remove build time dependencies from slug
 # (Note: runtime modules are copied to slug with --forceCopy option)

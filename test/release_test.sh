@@ -7,7 +7,7 @@ testReleasedYamlDoesNotIncludeDefaultProcWhenProcfileIsPresent() {
   expectedReleaseYAML=`cat <<EOF
 ---
 config_vars:
-  PATH: .play:.tools:/usr/local/bin:/usr/bin:/bin
+  PATH: .play:.jdk/bin:.tools:/usr/local/bin:/usr/bin:/bin
   JAVA_OPTS: -Xmx384m -Xss512k -XX:+UseCompressedOops
   PLAY_OPTS: --%prod -Dprecompiled=true
 addons:
@@ -15,14 +15,14 @@ addons:
 EOF`
 
   release
-  assertCaptured "${expectedReleaseYAML}"
+  assertCapturedEquals "${expectedReleaseYAML}"
 }
 
 testReleasedYamlHasDefaultProcessType() {
   expectedReleaseYAML=`cat <<EOF
 ---
 config_vars:
-  PATH: .play:.tools:/usr/local/bin:/usr/bin:/bin
+  PATH: .play:.jdk/bin:.tools:/usr/local/bin:/usr/bin:/bin
   JAVA_OPTS: -Xmx384m -Xss512k -XX:+UseCompressedOops
   PLAY_OPTS: --%prod -Dprecompiled=true
 addons:
@@ -32,5 +32,5 @@ default_process_types:
 EOF`
 
   release
-  assertCaptured "${expectedReleaseYAML}"
+  assertCapturedEquals "${expectedReleaseYAML}"
 }
