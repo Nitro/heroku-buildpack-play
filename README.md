@@ -13,7 +13,7 @@ Example usage:
     $ ls
     app	conf	lib	public	test
 
-    $ heroku create --stack cedar --buildpack http://github.com/heroku/heroku-buildpack-play.git
+    $ heroku create --stack cedar --buildpack https://github.com/Nitro/heroku-buildpack-play#java1.7
 
     $ git push heroku master
     ...
